@@ -121,8 +121,8 @@ A decisão técnica detalhada está documentada no PDF da Sprint 3. Resumindo:
 
 ### 1. Clonar o repositório
 ```bash
-git clone https://github.com/annabonfim/pedix-tutti-ai.git
-cd pedix-tutti-ai
+git clone https://github.com/annabonfim/tutti-ai-pedix.git
+cd tutti-ai-pedix
 ```
 
 ### 2. Criar ambiente virtual e instalar dependências
@@ -202,7 +202,7 @@ Exemplo de chamada usando `fetch`:
 ```typescript
 // src/services/tuttiService.ts
 const TUTTI_BASE_URL =
-  "https://pedix-tutti-ai.azurewebsites.net";  // URL do deploy
+  "https://tutti-ai-pedix.azurewebsites.net";  // URL do deploy
 
 export async function pedirRecomendacao(mensagem: string) {
   const response = await fetch(`${TUTTI_BASE_URL}/recommend`, {
@@ -287,7 +287,7 @@ republica automaticamente.
 ## 📂 Estrutura do projeto
 
 ```
-pedix-tutti-ai/
+tutti-ai-pedix/
 ├── app/
 │   ├── __init__.py
 │   ├── main.py                  # Ponto de entrada FastAPI
@@ -312,17 +312,17 @@ pedix-tutti-ai/
 
 ```bash
 # Recomendação simples
-curl -X POST "https://pedix-tutti-ai.azurewebsites.net/recommend" \
+curl -X POST "https://tutti-ai-pedix.azurewebsites.net/recommend" \
   -H "Content-Type: application/json" \
   -d '{"message": "Quero algo refrescante para beber"}'
 
 # Com restrição alimentar
-curl -X POST "https://pedix-tutti-ai.azurewebsites.net/recommend" \
+curl -X POST "https://tutti-ai-pedix.azurewebsites.net/recommend" \
   -H "Content-Type: application/json" \
   -d '{"message": "Sou vegetariano, o que voce sugere?"}'
 
 # Pedindo pelo mais popular
-curl -X POST "https://pedix-tutti-ai.azurewebsites.net/recommend" \
+curl -X POST "https://tutti-ai-pedix.azurewebsites.net/recommend" \
   -H "Content-Type: application/json" \
   -d '{"message": "Qual e o prato mais pedido?"}'
 ```
