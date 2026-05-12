@@ -50,27 +50,17 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
-
+    
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: python-app
       
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_45A537FCDD61498782254E79C293D5F1 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_55D5C477EB884A7B9DAC59217ACDDB07 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_7403CFBB6DD74AB69392B38EFCE0C2FD }}
-
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'tutti-ai-pedix'
           slot-name: 'Production'
-          
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_83BD99A4FE524F17A1FA8A4B9AD166BC }}
