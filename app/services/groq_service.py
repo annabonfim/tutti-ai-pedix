@@ -2,18 +2,20 @@
 from groq import Groq
 from app.config import settings
 
-SYSTEM_PROMPT = """Você é o assistente virtual do Pedix, um sistema de comanda \
-digital para restaurantes. Sua função é recomendar pratos do cardápio para os \
-clientes de forma amigável, breve e útil.
+SYSTEM_PROMPT = """Você é o Tutti, assistente virtual do Pedix, um sistema de \
+comanda digital para restaurantes. Sua função é recomendar pratos do cardápio \
+para os clientes de forma amigável, breve e útil.
 
 Regras:
 - Recomende APENAS itens que estejam no CARDÁPIO fornecido abaixo.
-- Use as AVALIAÇÕES (notas dos clientes) e a POPULARIDADE (pedidos) \
-para identificar pratos populares e bem avaliados.
-- Se o cliente mencionar restrições (vegetariano, sem glúten, alergia), respeite-as.
+- Use a CATEGORIA, a DESCRIÇÃO (ingredientes) e as AVALIAÇÕES médias \
+para escolher o melhor item.
+- Se o cliente mencionar restrições (vegetariano, sem glúten, alergia, \
+ingredientes específicos), VERIFIQUE NA DESCRIÇÃO e respeite-as.
 - Responda em português, em no máximo 3 frases.
 - Sempre cite o nome exato do prato e o preço (R$).
-- Se nenhum item for adequado, sugira o mais bem avaliado."""
+- Se nenhum item for adequado, sugira o mais bem avaliado da categoria \
+mais próxima e explique brevemente."""
 
 
 class GroqService:
@@ -21,26 +23,28 @@ class GroqService:
         self.client = Groq(api_key=settings.groq_api_key)
         self.model = settings.groq_model
 
-    def build_context(
-        self,
-        menu: list[dict],
-        ratings: list[dict],
-        pedido_items: list[dict],
-        categories: list[dict],
-    ) -> str:
-        # --- Categories ---
-        cat_text = "\n".join(
-            f"- {c.get('nome')}: {c.get('descricao', '')}"
-            for c in categories
-        ) or "Sem categorias."
+    def build_context(self, menu: list[dict], ratings: list[dict]) -> str:
+        # --- Menu agrupado por categoria, com descrição ---
+        by_cat: dict = {}
+        for item in menu:
+            cat = item.get("categoriaNome", "OUTROS")
+            by_cat.setdefault(cat, []).append(item)
 
-        # --- Menu ---
-        menu_text = "\n".join(
-            f"- [{item.get('id')}] {item.get('nome')} | R$ {float(item.get('preco', 0)):.2f}"
-            for item in menu
-        ) or "Cardápio vazio."
+        menu_lines: list[str] = []
+        for cat, items in by_cat.items():
+            menu_lines.append(f"\n[{cat}]")
+            for item in items:
+                line = (
+                    f"  - [{item.get('id')}] {item.get('nome')} "
+                    f"| R$ {float(item.get('preco', 0)):.2f}"
+                )
+                desc = item.get("descricao")
+                if desc:
+                    line += f"\n      Ingredientes: {desc}"
+                menu_lines.append(line)
+        menu_text = "\n".join(menu_lines) or "Cardápio vazio."
 
-        # --- Ratings: average per item ---
+        # --- Avaliações: média por item ---
         rating_sums: dict = {}
         rating_counts: dict = {}
         for r in ratings:
@@ -60,37 +64,14 @@ class GroqService:
                 )
         ratings_text = "\n".join(ratings_lines) or "Sem avaliações."
 
-        # --- Popularity from pedido_items ---
-        pop_counts: dict = {}
-        pop_names: dict = {}
-        for pi in pedido_items:
-            iid = pi.get("itemCardapioId")
-            qty = pi.get("quantidade", 1) or 1
-            if iid is not None:
-                pop_counts[iid] = pop_counts.get(iid, 0) + qty
-                pop_names[iid] = pi.get("nomeItem", "?")
-
-        top = sorted(pop_counts.items(), key=lambda x: x[1], reverse=True)[:5]
-        pop_text = "\n".join(
-            f"- {pop_names[iid]}: pedido {c}x" for iid, c in top
-        ) or "Sem histórico."
-
         return (
-            f"CATEGORIAS DO CARDÁPIO:\n{cat_text}\n\n"
-            f"CARDÁPIO:\n{menu_text}\n\n"
-            f"AVALIAÇÕES MÉDIAS:\n{ratings_text}\n\n"
-            f"MAIS PEDIDOS:\n{pop_text}"
+            f"CARDÁPIO COMPLETO (apenas itens disponíveis):"
+            f"{menu_text}\n\n"
+            f"AVALIAÇÕES MÉDIAS:\n{ratings_text}"
         )
 
-    def recommend(
-        self,
-        user_message: str,
-        menu: list[dict],
-        ratings: list[dict],
-        pedido_items: list[dict],
-        categories: list[dict],
-    ) -> str:
-        context = self.build_context(menu, ratings, pedido_items, categories)
+    def recommend(self, user_message: str, menu: list[dict], ratings: list[dict]) -> str:
+        context = self.build_context(menu, ratings)
         completion = self.client.chat.completions.create(
             model=self.model,
             messages=[

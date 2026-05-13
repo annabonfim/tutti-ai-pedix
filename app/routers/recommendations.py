@@ -20,16 +20,14 @@ class RecommendResponse(BaseModel):
     recommendation: str
     menu_size: int
     ratings_considered: int
-    pedido_items_considered: int
 
 
 @router.post("", response_model=RecommendResponse)
 async def recommend(payload: RecommendRequest):
-    # 1. Fetch data from the Java API
+    # 1. Buscar dados na Java API (endpoints públicos)
     try:
-        pedido_items = await pedix_client.get_pedido_items()
+        menu_raw = await pedix_client.get_menu()
         ratings = await pedix_client.get_ratings()
-        categories = await pedix_client.get_categories()
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(
@@ -37,23 +35,12 @@ async def recommend(payload: RecommendRequest):
             detail=f"Erro ao consultar Pedix API: {type(e).__name__}: {e!r}",
         )
 
-    # 2. Derive menu by deduplicating pedido_items per itemCardapioId
-    menu_dict: dict = {}
-    for pi in pedido_items:
-        iid = pi.get("itemCardapioId")
-        if iid is not None and iid not in menu_dict:
-            menu_dict[iid] = {
-                "id": iid,
-                "nome": pi.get("nomeItem", "Sem nome"),
-                "preco": pi.get("precoUnitario", 0),
-            }
-    menu = list(menu_dict.values())
+    # 2. Filtrar apenas itens disponíveis no momento
+    menu = [item for item in menu_raw if item.get("disponivel", True)]
 
-    # 3. Call Groq with the RAG context
+    # 3. Chamar Groq com o contexto RAG
     try:
-        text = groq_service.recommend(
-            payload.message, menu, ratings, pedido_items, categories
-        )
+        text = groq_service.recommend(payload.message, menu, ratings)
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(
@@ -65,5 +52,4 @@ async def recommend(payload: RecommendRequest):
         recommendation=text,
         menu_size=len(menu),
         ratings_considered=len(ratings),
-        pedido_items_considered=len(pedido_items),
     )
