@@ -1,6 +1,13 @@
 """Wraps the Groq LLM call for menu recommendations (RAG pattern)."""
+from typing import Literal
 from groq import Groq
+from pydantic import BaseModel, Field
 from app.config import settings
+
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(..., min_length=1, max_length=2000)
 
 SYSTEM_PROMPT = """Você é o Tutti, assistente virtual do Pedix, um sistema de \
 comanda digital para restaurantes. Recomenda pratos do cardápio para clientes \
@@ -91,14 +98,19 @@ class GroqService:
             f"AVALIAÇÕES MÉDIAS:\n{ratings_text}"
         )
 
-    def recommend(self, user_message: str, menu: list[dict], ratings: list[dict]) -> str:
+    def recommend(
+        self,
+        messages: list[ChatMessage],
+        menu: list[dict],
+        ratings: list[dict],
+    ) -> str:
         context = self.build_context(menu, ratings)
         completion = self.client.chat.completions.create(
             model=self.model,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "system", "content": context},
-                {"role": "user", "content": user_message},
+                *(msg.model_dump() for msg in messages),
             ],
             temperature=0.5,
             max_tokens=300,
