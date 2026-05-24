@@ -11,6 +11,21 @@ natural — direto no app mobile do Pedix.
 
 ---
 
+## 👥 Grupo CodeGirls
+
+| Nome | RM |
+|---|---|
+| Alane Rocha da Silva | RM561052 |
+| Anna Beatriz de Araujo Bonfim | RM559561 |
+| Maria Eduarda Araujo Penas | RM560944 |
+
+**Curso:** Análise e Desenvolvimento de Sistemas — FIAP
+**Disciplina:** Disruptive Architectures: IoT, IoB & Generative AI
+**Sprint:** 4 (entrega final)
+**Projeto:** Pedix — Comanda Digital Inteligente (Oracle Challenge)
+
+---
+
 ## 🎯 Para o avaliador — testa em 3 curls (30s)
 
 Sem precisar clonar nem rodar local. Bate direto no deploy do Azure:
@@ -35,21 +50,6 @@ Margherita tem mussarela, e sugere **escrever "sem mussarela" nas
 observações ao adicionar ao carrinho** (mostra que o LLM entende o
 fluxo de UX do app). Cold start da Java API pode atrasar a 1ª chamada
 em ~20s.
-
----
-
-## 👥 Grupo CodeGirls
-
-| Nome | RM |
-|---|---|
-| Alane Rocha da Silva | RM561052 |
-| Anna Beatriz de Araujo Bonfim | RM559561 |
-| Maria Eduarda Araujo Penas | RM560944 |
-
-**Curso:** Análise e Desenvolvimento de Sistemas — FIAP
-**Disciplina:** Disruptive Architectures: IoT, IoB & Generative AI
-**Sprint:** 4 (entrega final)
-**Projeto:** Pedix — Comanda Digital Inteligente (Oracle Challenge)
 
 ---
 
