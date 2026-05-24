@@ -394,7 +394,7 @@ com `Atendimento`, `Mesa`, `Comanda`). Quando a migração concluir:
 
 ## 📹 Vídeo Pitch
 
-🎬 **Link do YouTube:** *(será preenchido após a gravação)*
+🎬 **Link do YouTube:** https://youtu.be/0DtW9oS6_VM 
 
 ---
 
