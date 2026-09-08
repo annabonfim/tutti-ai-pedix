@@ -1,6 +1,6 @@
 """Wraps the Groq LLM call for menu recommendations (RAG pattern)."""
 from typing import Literal
-from groq import Groq
+from groq import AsyncGroq
 from pydantic import BaseModel, Field
 from app.config import settings
 
@@ -76,7 +76,7 @@ Tiramisù e Sorvete costumam ser vegetarianos.
 
 class GroqService:
     def __init__(self):
-        self.client = Groq(api_key=settings.groq_api_key)
+        self.client = AsyncGroq(api_key=settings.groq_api_key)
         self.model = settings.groq_model
 
     def build_context(self, menu: list[dict], ratings: list[dict]) -> str:
@@ -126,14 +126,14 @@ class GroqService:
             f"AVALIAÇÕES MÉDIAS:\n{ratings_text}"
         )
 
-    def recommend(
+    async def recommend(
         self,
         messages: list[ChatMessage],
         menu: list[dict],
         ratings: list[dict],
     ) -> str:
         context = self.build_context(menu, ratings)
-        completion = self.client.chat.completions.create(
+        completion = await self.client.chat.completions.create(
             model=self.model,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},

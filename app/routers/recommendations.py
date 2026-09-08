@@ -1,4 +1,5 @@
 """POST /recommend — main endpoint for AI menu recommendations."""
+import asyncio
 import traceback
 from typing import Optional
 from fastapi import APIRouter, HTTPException
@@ -67,10 +68,14 @@ class RecommendResponse(BaseModel):
 
 @router.post("", response_model=RecommendResponse)
 async def recommend(payload: RecommendRequest):
-    # 1. Buscar dados na Java API (endpoints públicos)
+    # 1. Buscar dados na Java API (endpoints públicos).
+    #    As duas chamadas são independentes, então rodam em paralelo:
+    #    o tempo total passa a ser o da mais lenta, não a soma das duas.
     try:
-        menu_raw = await pedix_client.get_menu()
-        ratings = await pedix_client.get_ratings()
+        menu_raw, ratings = await asyncio.gather(
+            pedix_client.get_menu(),
+            pedix_client.get_ratings(),
+        )
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(
@@ -83,7 +88,7 @@ async def recommend(payload: RecommendRequest):
 
     # 3. Chamar Groq com o contexto RAG + histórico de conversa
     try:
-        text = groq_service.recommend(payload.messages, menu, ratings)
+        text = await groq_service.recommend(payload.messages, menu, ratings)
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(
